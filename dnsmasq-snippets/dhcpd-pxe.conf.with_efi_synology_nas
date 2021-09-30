@@ -1,0 +1,5 @@
+dhcp-boot=tag:pxe,pxelinux.0,bootserver,192.168.0.3
+dhcp-vendorclass=set:pxe,PXEClient
+dhcp-match=efi, option:client-arch, 7 #EFI x86-64
+dhcp-boot=net:#apple-boot,net:efi,grub.efi # for UEFI arch detected by dhcp-match above
+
