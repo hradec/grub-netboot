@@ -16,6 +16,7 @@ grub-mkimage -d $CD/usr-lib-grub-i386-pc/ -O i386-pc-pxe -o ../grub.booti386 -p 
 	fat \
 	ext2 \
 	normal \
-	chain boot linux echo search \
-	memdisk tar reboot \
+	configfile \
+	chain boot linux linux16 echo search \
+	memdisk tar reboot loopback serial iso9660
 

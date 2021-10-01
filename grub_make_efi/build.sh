@@ -20,7 +20,7 @@ grub-mkstandalone \
 	efi_uga \
 	fakebios \
 	dhcp \
-	part_gpt hfsplus fat ext2 normal chain boot configfile linux loadenv echo \
+	part_gpt hfsplus fat ext2 normal chain boot configfile linux linux16 iso9660 loadenv echo \
 	search loadbios video_fb videotest pci efi_gop efi_uga font gfxterm font \
 	memdisk tar tftp reboot efinet \
         configfile boot/grub/grub.cfg
