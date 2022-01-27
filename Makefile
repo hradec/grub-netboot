@@ -1,16 +1,23 @@
 
 PXE_TEMP_IP=192.168.1.250
-PXE_TFTP=192.168.1.230
+PXE_TFTP=192.168.1.231
 
-install:
-	cat grub_template_menu.cfg | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" > grub.cfg
-	cat grub_template_bios.cfg | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" > grub_make_bios/grub.cfg
-	cd grub_make_bios && ./build.sh
-	cat grub_template_efi.cfg | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g"  > grub_make_efi/grub.cfg
-	cd grub_make_efi && ./build.sh
-	mkdir -p ./OSX/grub.nbi/i386 && sudo cp -rf grub.* ./OSX/grub.nbi/i386
+$(GRUB_ROOT_DIR).done: $(GRUB_ROOT_DIR)grub_template_menu.cfg $(GRUB_ROOT_DIR)grub_template_bios.cfg $(GRUB_ROOT_DIR)grub_template_efi.cfg
+	cat $(GRUB_ROOT_DIR)grub_template_menu.cfg | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" > $(GRUB_ROOT_DIR)grub.cfg && \
+	cat $(GRUB_ROOT_DIR)grub_template_menu.cfg | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" > $(GRUB_ROOT_DIR)grub_make_bios/grub_menu.cfg && \
+	cat $(GRUB_ROOT_DIR)grub_template_bios.cfg | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" > $(GRUB_ROOT_DIR)grub_make_bios/grub.cfg && \
+	cat $(GRUB_ROOT_DIR)grub_template_menu.cfg | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" >> $(GRUB_ROOT_DIR)grub_make_bios/grub.cfg && \
+	cd $(GRUB_ROOT_DIR)grub_make_bios && ./build.sh && cd .. && \
+	cat $(GRUB_ROOT_DIR)grub_template_efi.cfg | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g"  > $(GRUB_ROOT_DIR)grub_make_efi/grub.cfg && \
+	cd $(GRUB_ROOT_DIR)grub_make_efi && ./build.sh && cd .. && \
+	mkdir -p $(GRUB_ROOT_DIR)./OSX/grub.nbi/i386 && sudo cp -rf $(GRUB_ROOT_DIR)grub.* $(GRUB_ROOT_DIR)./OSX/grub.nbi/i386 && \
+	touch $(GRUB_ROOT_DIR).done
+	#cat $(GRUB_ROOT_DIR)grub_template_bios.cfg | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" | sed "s/configfile/#configfile/g" > $(GRUB_ROOT_DIR)grub_make_bios/grub.cfg
 
 
-clean:
-	rm grub.*
-	rm -rf ./OSX
+clean-grub:
+	rm -f $(GRUB_ROOT_DIR)grub.*
+	rm -f $(GRUB_ROOT_DIR)grub_make_efi/grub.*
+	rm -f $(GRUB_ROOT_DIR)grub_make_bios/grub.*
+	rm -rf $(GRUB_ROOT_DIR)./OSX
+	rm -f $(GRUB_ROOT_DIR).done

@@ -1,10 +1,11 @@
 #!/bin/bash
 
+mkstandalone=$(ls  /usr/bin/grub*mkstand*)
 
 CD=$(readlink -f $(dirname $BASH_SOURCE))
 cd $CD
 
-grub-mkstandalone \
+$mkstandalone \
         -d $CD/usr-lib-grub-x86_64-efi/   \
         -O x86_64-efi  \
         --fonts="unicode"  \
