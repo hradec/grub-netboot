@@ -9,8 +9,10 @@ GRUB_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 UID=$(shell id -u)
 GID=$(shell id -g)
 
+# by default, run this makefile in the docker build environment
 all: build_docker_image_and_run
 
+# this is the actual build entry running inside docker
 docker_build: $(GRUB_ROOT_DIR)/grub.efi
 
 $(GRUB_ROOT_DIR)/grub.efi: $(GRUB_ROOT_DIR)/grub_template_menu.cfg $(GRUB_ROOT_DIR)/grub_template_bios.cfg $(GRUB_ROOT_DIR)/grub_template_efi.cfg
@@ -26,7 +28,6 @@ $(GRUB_ROOT_DIR)/grub.efi: $(GRUB_ROOT_DIR)/grub_template_menu.cfg $(GRUB_ROOT_D
 	chown -R $(UID):$(GID) $(GRUB_ROOT_DIR)/grub_make_efi/grub.*  ;\
 	chown -R $(UID):$(GID) $(GRUB_ROOT_DIR)/grub_make_bios/grub.*  ;\
 	chown -R $(UID):$(GID) $(GRUB_ROOT_DIR)/OSX/  ;\
-
 
 build_docker_image_and_run:
 	cd $(GRUB_ROOT_DIR)/docker/ &&\
