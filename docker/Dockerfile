@@ -18,3 +18,29 @@ RUN apt install -y \
 RUN apt install -y \
         grub2 \
         sudo
+
+RUN apt install -y \
+        autoconf \
+        automake \
+	git
+
+RUN apt install -y \
+	autopoint \
+	pkg-config \
+	bison \
+	flex
+
+RUN apt install -y \
+	python \
+	libdevmapper-dev \
+	libfreetype-dev \
+	ipxe \
+	extlinux \
+	isolinux
+
+RUN apt install -y \
+	libfuse-dev \
+	fonts-dejavu \
+	fonts-dejavu-core \
+	fonts-dejavu-extra \
+

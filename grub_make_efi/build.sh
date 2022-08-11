@@ -12,6 +12,12 @@ $mkstandalone \
         -o ../grub.efi \
         pxe \
         pxechain \
+	fakebios \
+        usb \
+        usbms \
+	ntfs \
+        ntldr \
+        part_msdos \
 	net \
 	efinet \
 	tftp \
