@@ -1,15 +1,16 @@
 #!/bin/bash
 
-CD=$(dirname $(readlink -f $0))
-
-mkimage=$(ls  $CD/../git/install/bin/grub*mkimage)
-
 CD=$(readlink -f $(dirname $BASH_SOURCE))
 cd $CD
 
-$mkimage -d $CD/../git/install/lib/grub/i386-pc/ -O i386-pc-pxe -o ../grub.booti386 -p '/grub' \
+GRUB=$CD/../grub/git-install-pc-i386/
+mkimage=$(ls  $GRUB/bin/grub*mkimage)
+$mkimage -d $GRUB/lib/grub/i386-pc/ -O i386-pc-pxe -o ../grub.booti386 -p '/grub' \
         --config boot/grub/grub.cfg \
 	pxe \
+	sleep \
+	acpi \
+	usb \
 	pxechain \
 	usbms \
 	ntfs \
@@ -28,6 +29,3 @@ $mkimage -d $CD/../git/install/lib/grub/i386-pc/ -O i386-pc-pxe -o ../grub.booti
 	memdisk tar reboot loopback serial iso9660
 
 
-#	sleep \
-#	acpi \
-#	usb \
