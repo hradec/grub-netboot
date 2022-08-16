@@ -1,0 +1,57 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update ;\
+    apt install -y -q \
+        zip \
+        dosfstools \
+        syslinux-utils \
+        genisoimage \
+        build-essential \
+        wget
+
+RUN apt install -y -q\
+        squashfs-tools \
+        cpio \
+        curl \
+        util-linux
+
+RUN apt install -y -q\
+        grub2 \
+        sudo
+
+RUN apt install -y -q\
+        autoconf \
+        automake \
+	git
+
+RUN apt install -y -q\
+	autopoint \
+	pkg-config \
+	bison \
+	flex
+
+RUN apt install -y -q\
+	python \
+	libdevmapper-dev \
+	libfreetype-dev \
+	ipxe \
+	extlinux \
+	isolinux
+
+RUN apt install -y -q\
+	libfuse-dev \
+	fonts-dejavu \
+	fonts-dejavu-core \
+	fonts-dejavu-extra
+
+RUN apt install -y -q\
+	lzma-dev \
+	liblzma-dev
+
+RUN dpkg --add-architecture i386 ;\
+    apt update ;\
+    apt install -y -o Acquire::Retries=50 \
+	mtools syslinux isolinux \
+	libc6-dev-i386 libc6-dbg:i386 valgrind
