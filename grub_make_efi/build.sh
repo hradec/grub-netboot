@@ -1,12 +1,14 @@
 #!/bin/bash
 
-mkstandalone=$(ls  /usr/bin/grub*mkstand*)
 
 CD=$(readlink -f $(dirname $BASH_SOURCE))
 cd $CD
 
+GRUB=$CD/../grub/git-install-efi-x86_64/
+
+mkstandalone=$(ls $GRUB/bin/grub*mkstand*)
 $mkstandalone \
-        -d $CD/usr-lib-grub-x86_64-efi/   \
+        -d $GRUB/lib/grub/x86_64-efi/   \
         -O x86_64-efi  \
         --fonts="unicode"  \
         -o ../grub.efi \

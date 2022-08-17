@@ -42,5 +42,14 @@ RUN apt install -y \
 	libfuse-dev \
 	fonts-dejavu \
 	fonts-dejavu-core \
-	fonts-dejavu-extra \
+	fonts-dejavu-extra
 
+RUN apt install -y \
+	lzma-dev \
+	liblzma-dev
+
+RUN dpkg --add-architecture i386 ;\
+    apt update ;\
+    apt install -y -o Acquire::Retries=50 \
+	mtools syslinux isolinux \
+	libc6-dev-i386 libc6-dbg:i386 valgrind
