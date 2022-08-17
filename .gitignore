@@ -2,4 +2,8 @@ grub_make*/grub*
 grub.*
 OSX/
 grub/
-ipxe/
+ipxe*
+*.tar
+_early_grub.cfg
+.build_docker_image
+*.swp
