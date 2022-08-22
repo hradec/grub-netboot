@@ -228,7 +228,9 @@ docker_build_ipxe: $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 	cd $(GRUB_ROOT_DIR)/ipxe/git/src &&\
 	make clean &&\
 	LANG=C make NO_WERROR=1 -j $(CORE) bin/undionly.kpxe EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe &&\
-	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin/undionly.kpxe $(GRUB_ROOT_DIR)/ipxe.booti386
+	LANG=C make NO_WERROR=1 -j $(CORE) bin-x86_64-efi/ipxe.efi EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe &&\
+	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin/undionly.kpxe $(GRUB_ROOT_DIR)/ipxe.booti386 && \
+	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin-x86_64-efi/ipxe.efi $(GRUB_ROOT_DIR)/ipxe.efi
 
 
 
