@@ -6,8 +6,10 @@ GRUB_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 CORES:=$(shell nproc)
 
 # docker file to build
-#DOCKERFILE:=$(GRUB_ROOT_DIR)/docker/Dockerfile.ubuntu2004
+DOCKERFILE:=$(GRUB_ROOT_DIR)/docker/Dockerfile.ubuntu2004
+DOCKERIMAGE:=hradec/ipxe-buid-ubuntu:20.04
 DOCKERFILE:=$(GRUB_ROOT_DIR)/docker/Dockerfile
+DOCKERIMAGE:=hradec/ipxe-buid-debian:11
 
 # we use uid and gid to keep files with the correct permissions, since docker
 # runs as root user!
@@ -34,7 +36,7 @@ $(GRUB_ROOT_DIR)/grub.efi: $(GRUB_ROOT_DIR)/grub.cfg $(GRUB_ROOT_DIR)/grub_templ
 
 $(GRUB_ROOT_DIR)/.build_docker_image:
 	cd $(GRUB_ROOT_DIR)/docker/ &&\
-	docker build . -f $(DOCKERFILE) -t grub-netboot-build
+	docker build . -f $(DOCKERFILE) -t $(DOCKERIMAGE)
 	touch $(GRUB_ROOT_DIR)/.build_docker_image
 
 clean:
@@ -62,7 +64,7 @@ grub_menu: grub ipxe $(GRUB_ROOT_DIR)/.build_docker_image
 		--rm \
 		--privileged=true \
 		-v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ \
-		grub-netboot-build \
+		$(DOCKERIMAGE) \
 		/bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) docker_build_grub_menu'
 
 # this is the actual build entry running inside docker
@@ -79,19 +81,19 @@ docker_build_grub_menu: $(GRUB_ROOT_DIR)/grub.efi $(GRUB_ROOT_DIR)/grub.booti386
 grub: $(GRUB_ROOT_DIR)/grub/git-install-pc-i386/bin/grub-mkstandalone $(GRUB_ROOT_DIR)/grub/git-install-efi-i386/bin/grub-mkstandalone $(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64/bin/grub-mkstandalone $(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64/bin/grub-mkstandalone
 
 $(GRUB_ROOT_DIR)/grub/git-install-pc-i386/bin/grub-mkstandalone: $(GRUB_ROOT_DIR)/.build_docker_image
-	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ grub-netboot-build  /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-pc-i386/bin/grub-mkimage'
+	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ $(DOCKERIMAGE) /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-pc-i386/bin/grub-mkimage'
 	touch $@
 
 $(GRUB_ROOT_DIR)/grub/git-install-efi-i386/bin/grub-mkstandalone: $(GRUB_ROOT_DIR)/.build_docker_image
-	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ grub-netboot-build  /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-efi-i386/bin/grub-mkimage'
+	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ $(DOCKERIMAGE) /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-efi-i386/bin/grub-mkimage'
 	touch $@
 
 $(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64/bin/grub-mkstandalone: $(GRUB_ROOT_DIR)/.build_docker_image
-	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ grub-netboot-build  /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64/bin/grub-mkimage'
+	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ $(DOCKERIMAGE)  /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64/bin/grub-mkimage'
 	touch $@
 
 $(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64/bin/grub-mkstandalone: $(GRUB_ROOT_DIR)/.build_docker_image
-	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ grub-netboot-build  /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64/bin/grub-mkimage'
+	docker run  --rm --privileged=true -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ $(DOCKERIMAGE)  /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) $(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64/bin/grub-mkimage'
 	touch $@
 
 
@@ -147,7 +149,7 @@ $(GRUB_ROOT_DIR)/ipxe.booti386: $(GRUB_ROOT_DIR)/.build_docker_image $(GRUB_ROOT
                 --rm \
                 --privileged=true \
                 -v $(GRUB_ROOT_DIR)/:$(GRUB_ROOT_DIR)/ \
-                grub-netboot-build \
+                $(DOCKERIMAGE) \
                 /bin/bash -c 'cd $(GRUB_ROOT_DIR)/ && make UID=$(UID) GID=$(GID) docker_build_ipxe'
 	chown -R $(UID):$(GID) $(GRUB_ROOT_DIR)/ipxe.booti386
 	touch $(GRUB_ROOT_DIR)/ipxe.booti386
@@ -155,21 +157,22 @@ $(GRUB_ROOT_DIR)/ipxe.booti386: $(GRUB_ROOT_DIR)/.build_docker_image $(GRUB_ROOT
 
 docker_build_ipxe_git:
 	if [ ! -e $(GRUB_ROOT_DIR)/ipxe/git/src ] ; then \
-		mkdir -p ipxe &&\
-		git clone --recursive --depth=1 https://github.com/ipxe/ipxe.git  $(GRUB_ROOT_DIR)/ipxe/git/ ;\
+		mkdir -p ipxe ;\
+		git clone --recursive https://github.com/ipxe/ipxe.git  $(GRUB_ROOT_DIR)/ipxe/git/ ;\
+	fi
 		cd $(GRUB_ROOT_DIR)/ipxe/git/ ;\
-		git fetch --tags &&\
+		git fetch --tags ;\
 		lastest_tag=$$(git describe --tags $$(git rev-list --tags --max-count=1)) &&\
 		echo $$lastest_tag &&\
-		git checkout tags/$$lastest_tag -b $$lastest_tag ;\
-	fi
+		git checkout HEAD && \
+		git checkout tags/$$lastest_tag
 
 # convert grub_template_menu to a simple ipxe menu
 MENU_DEFAULT:=1
 $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe: docker_build_ipxe_git
-	rm $(GRUB_ROOT_DIR)/ipxe/git/src/menu
+	rm -rf $(GRUB_ROOT_DIR)/ipxe/git/src/menu
 	echo "#!ipxe\n" > $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
-	echo "\n:retry_dhcp\ndhcp || goto retry_dhcp\n" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
+	echo "\n:retry_dhcp\ndhcp -t 3600 || goto retry_dhcp\n" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 	grub=$$(egrep -v '#|echo' $(GRUB_ROOT_DIR)/grub_template_menu.cfg) ; \
 	for n in $$(echo "$$grub" | grep menuentry | awk -F"'" '{print $$2}' | sed 's/ /./g') ; do \
 		kernel=$$(echo "$$grub" | grep "$$n" -A5 | grep linux  | awk -F'linux ' '{print $$2}' | sed 's/PXE_TFTP/$(PXE_TFTP)/g') ; \
@@ -182,7 +185,7 @@ $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe: docker_build_ipxe_git
 		fi ; \
 	done
 	echo ":start" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe  ; \
-	echo "menu iPXE boot menu\nitem --gap --" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe  ; \
+	echo 'menu iPXE boot menu ($${net0/ip})\nitem --gap --' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe  ; \
 	cat $(GRUB_ROOT_DIR)/ipxe/git/src/menu | while read m ; do \
 		item=$$(echo "$$m" | awk -F'@' '{print $$1}') ; \
 		echo "item $$item\t$$item" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
@@ -202,21 +205,25 @@ $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe: docker_build_ipxe_git
 			echo ":$$item\ngoto exit_ipxe\n" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
 		else \
 			echo ":$$item" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
-			echo "kernel tftp://$(PXE_TFTP)/$$k" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
+			echo 'echo IP address: $${net0/ip} ; echo Subnet mask: $${net0/netmask} ;echo ' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
+			echo "kernel tftp://$(PXE_TFTP)/$$k || shell" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
 			echo "initrd tftp://$(PXE_TFTP)/$$i" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
-			echo "imgargs $$(basename $$k) $$a\nboot\ngoto start\n" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
+			echo "imgargs $$(basename $$k) $$a\nboot || sleep 600\ngoto start\n" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
 		fi ; \
 	done
 	echo ':exit_ipxe\n\n' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 
 # this is the actual build entry running inside docker
+#DEBUG_EFI:=" DEBUG=efi_image "
 ipxe_chainload_filename:=grub-netboot-git/grub.booti386
 docker_build_ipxe: $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
+	gcc --version
 	echo    "#!ipxe\
 		\n:retry_dhcp\
 		\ndhcp || goto retry_dhcp\
 		\n\
 		\necho Booting from $(ipxe_chainload_filename)\
+		\necho IP address: ${net0/ip} ; echo Subnet mask: ${net0/netmask} \
 		\n#chain tftp://$(PXE_TFTP)/$(ipxe_chainload_filename)\
 		\nkernel tftp://$(PXE_TFTP)/vmlinuz\
 		\ninitrd tftp://$(PXE_TFTP)/initrd\
@@ -227,10 +234,11 @@ docker_build_ipxe: $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 	cp $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe $(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe
 	cd $(GRUB_ROOT_DIR)/ipxe/git/src &&\
 	make clean &&\
+	LANG=C make NO_WERROR=1 -j $(CORE) bin-x86_64-efi/ipxe.efi EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe $(DEBUG_EFI) &&\
+	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin-x86_64-efi/ipxe.efi $(GRUB_ROOT_DIR)/ipxe.efi && \
+	make clean &&\
 	LANG=C make NO_WERROR=1 -j $(CORE) bin/undionly.kpxe EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe &&\
-	LANG=C make NO_WERROR=1 -j $(CORE) bin-x86_64-efi/ipxe.efi EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe &&\
-	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin/undionly.kpxe $(GRUB_ROOT_DIR)/ipxe.booti386 && \
-	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin-x86_64-efi/ipxe.efi $(GRUB_ROOT_DIR)/ipxe.efi
+	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin/undionly.kpxe $(GRUB_ROOT_DIR)/ipxe.booti386
 
 
 
