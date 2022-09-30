@@ -1,9 +1,6 @@
-
 PXE_TEMP_IP:=192.168.1.250
 PXE_TFTP:=192.168.1.231
 
-DEFAULT_BOOT:=1
-DEFAULT_TIMEOUT:=5
 
 GRUB_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 CORES:=$(shell nproc)
@@ -39,7 +36,7 @@ $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz:
 $(GRUB_ROOT_DIR)/grub.cfg: $(GRUB_ROOT_DIR)/grub_template_menu.cfg $(GRUB_ROOT_DIR)/grub_boot_defaults
 	echo >  $(GRUB_ROOT_DIR)/grub.cfg
 	egrep 'timeout|default' $(GRUB_ROOT_DIR)/grub_template_menu.cfg >> $(GRUB_ROOT_DIR)/grub.cfg
-	cat $(GRUB_ROOT_DIR)/grub_boot_defaults | while read l ; do m=$$(echo $$l | awk '{print tolower($$1)}');d=$$(echo $$l | awk '{print $$2}');t=$$(echo $$l | awk '{print $$3}');echo -e "if [ \"x\$${net_default_mac}\" = \"x$$m\" ]; then\n\tset timeout=$$t\n\tset default=$$d\nfi" ; done >>  $(GRUB_ROOT_DIR)/grub.cfg 
+	cat $(GRUB_ROOT_DIR)/grub_boot_defaults | while read l ; do m=$$(echo $$l | awk '{print tolower($$1)}');d=$$(echo $$l | awk '{print $$2}');t=$$(echo $$l | awk '{print $$3}');h=$$(echo $$l | awk '{print $$4}');echo -e "if [ x\$${net_ne0_mac} == x$$m -o x\$${net_ne1_mac} == x$$m ]; then set timeout=$$t ; set default=$$d ; fi # hostname: $$h" ; done >>  $(GRUB_ROOT_DIR)/grub.cfg 
 	egrep -v 'timeout|default'  $(GRUB_ROOT_DIR)/grub_template_menu.cfg | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" >> $(GRUB_ROOT_DIR)/grub.cfg
 
 
@@ -81,6 +78,8 @@ distclean: clean
 
 
 STUDIO:=$(shell dirname `ls  /*/.root` 2>/dev/null)
+DEFAULT_BOOT:=$(shell egrep '^set default' $(GRUB_ROOT_DIR)/grub_template_menu.cfg  | awk -F'=' '{print $$2}')
+DEFAULT_TIMEOUT:=$(shell egrep '^set timeout' $(GRUB_ROOT_DIR)/grub_template_menu.cfg  | awk -F'=' '{print $$2}')
 grub_menu: $(GRUB_ROOT_DIR)/.build_docker_image $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz $(GRUB_ROOT_DIR)/grub_boot_defaults grub $(GRUB_ROOT_DIR)/ipxe/git/src/vmlinuz
 	touch $(GRUB_ROOT_DIR)/grub_boot_defaults
 	cat $(STUDIO)/pipeline/tools/init/hosts | while read line ; do \
