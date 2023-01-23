@@ -30,6 +30,7 @@ $(GRUB_ROOT_DIR)/ipxe/git/src/initrd: ${initrd}
 
 $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz:
 	cp -Lvu ${vmlinuz} $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz
+$(GRUB_ROOT_DIR)/grub_make_efi/initrd:
 	cp -Lvu ${initrd} $(GRUB_ROOT_DIR)/grub_make_efi/initrd
 
 
@@ -80,7 +81,7 @@ distclean: clean
 STUDIO:=$(shell dirname `ls  /*/.root` 2>/dev/null)
 DEFAULT_BOOT:=$(shell egrep '^set default' $(GRUB_ROOT_DIR)/grub_template_menu.cfg  | awk -F'=' '{print $$2}')
 DEFAULT_TIMEOUT:=$(shell egrep '^set timeout' $(GRUB_ROOT_DIR)/grub_template_menu.cfg  | awk -F'=' '{print $$2}')
-grub_menu: $(GRUB_ROOT_DIR)/.build_docker_image $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz $(GRUB_ROOT_DIR)/grub_boot_defaults grub $(GRUB_ROOT_DIR)/ipxe/git/src/vmlinuz
+grub_menu: $(GRUB_ROOT_DIR)/.build_docker_image $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz $(GRUB_ROOT_DIR)/grub_make_efi/initrd $(GRUB_ROOT_DIR)/grub_boot_defaults grub $(GRUB_ROOT_DIR)/ipxe/git/src/vmlinuz
 	touch $(GRUB_ROOT_DIR)/grub_boot_defaults
 	cat $(STUDIO)/pipeline/tools/init/hosts | while read line ; do \
 		mac=$$(echo  $$line | awk -F' ' '{print $$1}') ;\
@@ -134,41 +135,42 @@ $(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64/bin/grub-mkstandalone: $(GRUB_ROOT_
 
 $(GRUB_ROOT_DIR)/grub/git:
 	if [ ! -e $(GRUB_ROOT_DIR)/grub/git ] ; then \
-		mkdir -p grub &&\
-		git clone --recursive --depth=1 https://git.savannah.gnu.org/git/grub.git  $(GRUB_ROOT_DIR)/grub/git &&\
-		cd $(GRUB_ROOT_DIR)/grub/git ;\
-		git fetch --tags &&\
-		lastest_tag=$$(git describe --tags $$(git rev-list --tags --max-count=1)) &&\
-		echo $$lastest_tag &&\
-		git checkout tags/$$lastest_tag -b $$lastest_tag ;\
-	fi
+		mkdir -p grub \
+		&& git clone --recursive --depth=1 https://git.savannah.gnu.org/git/grub.git  $(GRUB_ROOT_DIR)/grub/git \
+		&& cd $(GRUB_ROOT_DIR)/grub/git \
+		&& git fetch --tags \
+		&& lastest_tag=$$(git describe --tags $$(git rev-list --tags --max-count=1)) \
+		&& echo $$lastest_tag \
+		&& echo git checkout tags/$$lastest_tag -b $$lastest_tag \
+	; fi
 
 $(GRUB_ROOT_DIR)/grub/git/configure: $(GRUB_ROOT_DIR)/grub/git
 	cd $(GRUB_ROOT_DIR)/grub/git &&\
 	if [ ! -e $(GRUB_ROOT_DIR)/grub/git/configure ] ; then ./bootstrap ; fi
 
+#GRUB_BUILD_EXTRA_CONFIGURE:=" --enable-device-mapper "
 $(GRUB_ROOT_DIR)/grub/git-install-efi-i386/bin/grub-mkimage: $(GRUB_ROOT_DIR)/grub/git/configure
 	cd $(GRUB_ROOT_DIR)/grub/git &&\
 	make clean ;\
-	./configure --with-platform=efi --target=i386 --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-efi-i386 && \
+	./configure $(GRUB_BUILD_EXTRA_CONFIGURE) --with-platform=efi --target=i386 --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-efi-i386 && \
 	make -j $(CORE) ; make -j $(CORE) install
 
 $(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64/bin/grub-mkimage: $(GRUB_ROOT_DIR)/grub/git/configure
 	cd $(GRUB_ROOT_DIR)/grub/git &&\
 	make clean ;\
-	./configure --with-platform=efi --target=x86_64 --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64 &&\
+	./configure $(GRUB_BUILD_EXTRA_CONFIGURE) --with-platform=efi --target=x86_64 --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-efi-x86_64 &&\
 	make -j $(CORE) ; make -j $(CORE) install
 
 $(GRUB_ROOT_DIR)/grub/git-install-pc-i386/bin/grub-mkimage: $(GRUB_ROOT_DIR)/grub/git/configure
 	cd $(GRUB_ROOT_DIR)/grub/git &&\
 	make clean ;\
-	./configure --with-platform=pc  --target=i386   --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-pc-i386    &&\
+	./configure $(GRUB_BUILD_EXTRA_CONFIGURE) --with-platform=pc  --target=i386   --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-pc-i386    &&\
 	make -j $(CORE) ; make -j $(CORE) install
 
 $(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64/bin/grub-mkimage: $(GRUB_ROOT_DIR)/grub/git/configure
 	cd $(GRUB_ROOT_DIR)/grub/git &&\
 	make clean ;\
-	./configure --with-platform=pc  --target=x86_64 --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64  &&\
+	./configure $(GRUB_BUILD_EXTRA_CONFIGURE) --with-platform=pc  --target=x86_64 --disable-werror --prefix=$(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64  &&\
 	make -j $(CORE) ; make -j $(CORE) install
 
 
@@ -271,13 +273,13 @@ docker_build_ipxe: $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 	cp $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe $(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe
 	cat $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe  | sed 's/tftp.\/\/.*\///' | sed 's/dhcp -t/#dhcp/' > $(GRUB_ROOT_DIR)/ipxe/git/src/menu_with_linux.ipxe
 	cd $(GRUB_ROOT_DIR)/ipxe/git/src &&\
-	make clean &&\
-	LANG=C make NO_WERROR=1 -j $(CORE) bin-x86_64-efi/ipxe.efi EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe $(DEBUG_EFI) &&\
-	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin-x86_64-efi/ipxe.efi $(GRUB_ROOT_DIR)/ipxe.efi && \
-	make clean &&\
-	LANG=C make NO_WERROR=1 -j $(CORE) bin-x86_64-efi/ipxe.efi EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/menu_with_linux.ipxe,vmlinuz,initrd $(DEBUG_EFI) &&\
-	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin-x86_64-efi/ipxe.efi $(GRUB_ROOT_DIR)/ipxe_with_linux.efi && \
-	make clean &&\
+	echo make clean &&\
+	echo LANG=C make NO_WERROR=1 -j $(CORE) bin-x86_64-efi/ipxe.efi EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe $(DEBUG_EFI) &&\
+	echo cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin-x86_64-efi/ipxe.efi $(GRUB_ROOT_DIR)/ipxe.efi && \
+	echo make clean &&\
+	echo LANG=C make NO_WERROR=1 -j $(CORE) bin-x86_64-efi/ipxe.efi EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/menu_with_linux.ipxe,vmlinuz,initrd $(DEBUG_EFI) &&\
+	echo cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin-x86_64-efi/ipxe.efi $(GRUB_ROOT_DIR)/ipxe_with_linux.efi && \
+	echo make clean &&\
 	LANG=C make NO_WERROR=1 -j $(CORE) bin/undionly.kpxe EMBED=$(GRUB_ROOT_DIR)/ipxe/git/src/demo.ipxe &&\
 	cp $(GRUB_ROOT_DIR)/ipxe/git/src/bin/undionly.kpxe $(GRUB_ROOT_DIR)/ipxe.booti386
 
