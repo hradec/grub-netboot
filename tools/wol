@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#mac1=90:09:D0:03:05:15
+#ip=10.244.0.4
+
+ip=$2
+mac1=$1
+
+
+pingmac() {
+	arp | grep $1 -i | awk '{print $1}' | while read ip ; do ping -c 1 -t 5 $ip ; done
+}
+
+wakeonlan() {
+   if [ -e /usr/bin/wakeonlan ] ; then
+        /usr/bin/wakeonlan $1
+   else
+        eth=$(route -n | egrep '0.0.0.0.*UG' | awk '{print $(NF)}')
+        sudo synonet --wake $1 $eth
+   fi
+}
+
+while [ "$(pingmac $mac1 | grep ' 0%')" == "" ] ; do
+        wakeonlan  $mac1
+#        /usr/bin/wakeonlan -i $ip $mac1
+	sleep 5
+done
+pingmac $mac1
+
+
+
