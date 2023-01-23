@@ -1,8 +1,6 @@
 0A:E5:B8:37:3E:51	1	15	ws-000.local
-E2:C0:ED:FD:42:19	1	15	ws-001.local
-0E:1C:EE:F6:05:8A	1	15	ws-002.local
-20:CF:30:66:AC:7E	1	15	ws-003.local
-C6:A1:21:0C:67:AD	1	15	ws-004.local
+20:CF:30:66:AC:7E	1	15	ws-001.local
+C6:A1:21:0C:67:AD	1	15	ws-002.local
 C8:D3:FF:BA:6C:37	0	15	tbc005.local
 E0:4F:43:E6:BF:CC	1	15	
 74:D4:35:EC:FB:6C	1	15	barton01.local
@@ -37,3 +35,5 @@ A0:36:9F:57:03:58	1	15	nuke01.local
 40:8D:5C:E7:E6:AC	1	15	nuke02.local
 A8:5E:45:57:AB:98	1	15	nuke03.local
 F6:C4:51:AD:F6:1E	0	15	vm-netboot-gpu.local
+0E:1C:EE:F6:05:8A	0	15	vm-netboot-bios.local
+E2:C0:ED:FD:42:19	0	15	vm-netboot-efi.local
