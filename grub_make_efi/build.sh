@@ -18,6 +18,7 @@ $mkstandalone \
         -o ../grub.efi \
 	fakebios \
 	time \
+	all_video \
         at_keyboard \
         usb_keyboard \
         usb \
