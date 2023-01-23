@@ -179,7 +179,7 @@ $(GRUB_ROOT_DIR)/grub/git-install-pc-x86_64/bin/grub-mkimage: $(GRUB_ROOT_DIR)/g
 # =========================================================================================================================================================
 ipxe: $(GRUB_ROOT_DIR)/ipxe.booti386
 
-$(GRUB_ROOT_DIR)/ipxe.booti386: $(GRUB_ROOT_DIR)/.build_docker_image $(GRUB_ROOT_DIR)/Makefile
+$(GRUB_ROOT_DIR)/ipxe.booti386: $(GRUB_ROOT_DIR)/.build_docker_image $(GRUB_ROOT_DIR)/Makefile $(GRUB_ROOT_DIR)/grub_boot_defaults
 	docker run \
                 --rm \
                 --privileged=true \
@@ -220,16 +220,29 @@ $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe: docker_build_ipxe_git
 			echo -e "$$n@$$kernel@$$initrd" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu ; \
 		fi ; \
 	done
-	echo -e ":start" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe  ; \
-	echo -e 'menu iPXE boot menu ($${net0/ip})\nitem --gap --' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe  ; \
+	echo -e 'goto $${mac:hexraw} || goto mac_default' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
+	cat $(GRUB_ROOT_DIR)/grub_boot_defaults | while read each ; do \
+		m=$$(echo $$each | awk '{print $$1}') ;\
+		d=$$(echo $$each | awk '{print $$2}') ;\
+		d=$$(sed $$(echo $$(( $$d+1 )) | awk '{print $$1"!d"}') $(GRUB_ROOT_DIR)/ipxe/git/src/menu | awk -F'@' '{print $$1}') ;\
+		echo $$d ; \
+		echo -e ":$$(echo $${m,,} | sed 's/://g')" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ;\
+		echo -e "set default $$d" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ;\
+		echo -e "goto start" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ;\
+	done
+	echo -e ":mac_default" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
+	echo -e "set default $$(sed $$(echo $$(( $(MENU_DEFAULT)+1 )) | awk '{print $$1"!d"}') $(GRUB_ROOT_DIR)/ipxe/git/src/menu | awk -F'@' '{print $$1}')\n" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ;\
+	\
+	echo -e ":start" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ;\
+	echo -e 'menu iPXE boot menu ($${net0/ip})\nitem --gap --' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ;\
 	cat $(GRUB_ROOT_DIR)/ipxe/git/src/menu | while read m ; do \
 		item=$$(echo -e "$$m" | awk -F'@' '{print $$1}') ; \
 		echo -e "item $$item\t$$item" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe ; \
 	done
 	timeout=$$(grep timeout $(GRUB_ROOT_DIR)/grub_template_menu.cfg | grep -v '#' | awk -F'=' '{print $$2}') ; \
 	t=$$(( $$timeout * 1000 )) ; \
-	default=$(MENU_DEFAULT) ; \
-	echo -e "choose --timeout $$t --default $$(head -n $$(( 0 + 1+ $$default ))  $(GRUB_ROOT_DIR)/ipxe/git/src/menu | tail -1 | awk -F'@' '{print $$1}') selected" >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
+	echo -e -n "choose --timeout $$t " >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
+	echo -e '--default $${default} selected' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 	echo -e 'set menu-timeout 0' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 	echo -e 'goto $${selected}\n' >> $(GRUB_ROOT_DIR)/ipxe/git/src/menu.ipxe
 	cat $(GRUB_ROOT_DIR)/ipxe/git/src/menu | while read m ; do \
