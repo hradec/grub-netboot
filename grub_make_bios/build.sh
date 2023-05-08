@@ -32,6 +32,7 @@ $mkimage -d $GRUB/lib/grub/i386-pc/ \
 	ntldr \
         net \
         tftp \
+        http \
 	gzio \
 	part_msdos \
 	part_gpt \

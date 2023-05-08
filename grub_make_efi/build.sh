@@ -29,6 +29,7 @@ $mkstandalone \
 	net \
 	efinet \
 	tftp \
+	http \
 	gzio \
 	part_gpt \
 	efi_gop \
