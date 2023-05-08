@@ -11,3 +11,4 @@ grub_make_bios/initrd
 grub_make_bios/vmlinuz
 grub_make_efi/initrd
 grub_make_efi/vmlinuz
+grub_make_efi/boot/grub/grub.cfg
