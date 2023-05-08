@@ -80,7 +80,8 @@ $(GRUB_ROOT_DIR)/grub.booti386: $(GRUB_ROOT_DIR)/grub.cfg $(GRUB_ROOT_DIR)/grub_
 	cd $(GRUB_ROOT_DIR)/grub_make_bios && ./build.sh
 
 $(GRUB_ROOT_DIR)/grub.efi: $(GRUB_ROOT_DIR)/grub.cfg $(GRUB_ROOT_DIR)/grub_template_efi.cfg $(GRUB_ROOT_DIR)/grub_make_efi/build.sh
-	cat $(GRUB_ROOT_DIR)/grub_template_efi.cfg  | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" | sed "s/DISK/${DISK}/g"   > $(GRUB_ROOT_DIR)/grub_make_efi/grub.cfg
+	cat $(GRUB_ROOT_DIR)/grub_template_efi.cfg  | grep -v '#' | sed "s/PXE_TEMP_IP/${PXE_TEMP_IP}/g" | sed "s/PXE_TFTP/${PXE_TFTP}/g" | sed "s/DISK/${DISK}/g"   > $(GRUB_ROOT_DIR)/grub_make_efi/grub.cfg && \
+	mkdir -p $(GRUB_ROOT_DIR)/grub_make_efi/boot/grub/ && \
 	cat $(GRUB_ROOT_DIR)/grub_make_efi/grub.cfg > $(GRUB_ROOT_DIR)/grub_make_efi/boot/grub/grub.cfg && \
 	cat $(GRUB_ROOT_DIR)/grub.cfg >> $(GRUB_ROOT_DIR)/grub_make_efi/boot/grub/grub.cfg && \
 	cd $(GRUB_ROOT_DIR)/grub_make_efi && ./build.sh && cd .. && \
