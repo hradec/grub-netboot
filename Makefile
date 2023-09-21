@@ -27,9 +27,11 @@ all: grub_menu $(GRUB_ROOT_DIR)/grub_boot_defaults cleanup
 #vmlinuz:=$(shell readlink -f $(GRUB_ROOT_DIR)/../vmlinuz)
 #initrd:=$(shell readlink -f $(GRUB_ROOT_DIR)/../initrd)
 
-# fedora kernel from DISK image
+# force the use of one shell for all shell lines, instead of one shell per line.
+.ONESHELL:
 
-/dev/shm/initrd:
+# fedora kernel from DISK image
+/dev/shm/initrd: $(DISK_IMAGE)
 	mkdir -p /dev/shm/boot_tmp
 	umount /dev/shm/boot_tmp || true
 	umount /dev/shm/boot_tmp || true
@@ -62,8 +64,10 @@ $(GRUB_ROOT_DIR)/ipxe/git/src/initrd: /dev/shm/initrd
 
 $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz: /dev/shm/initrd
 	cp -Lvu /dev/shm/vmlinuz $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz
+	chmod a+r $(GRUB_ROOT_DIR)/grub_make_efi/vmlinuz
 $(GRUB_ROOT_DIR)/grub_make_efi/initrd: /dev/shm/initrd
 	cp -Lvu /dev/shm/initrd $(GRUB_ROOT_DIR)/grub_make_efi/initrd
+	chmod a+r $(GRUB_ROOT_DIR)/grub_make_efi/initrd
 
 
 $(GRUB_ROOT_DIR)/grub.cfg: $(GRUB_ROOT_DIR)/grub_template_menu.cfg $(GRUB_ROOT_DIR)/grub_boot_defaults
